@@ -6,8 +6,9 @@
 .DESCRIPTION
     Copies SearchTools.psm1 to
     $HOME\Documents\WindowsPowerShell\Modules\SearchTools.psm1, creating the
-    destination directories as needed. Repeating setup refreshes the installed
-    module. Prompts to import the installed module into the current session.
+    destination directories as needed. Copies SearchTools.format.ps1xml beside
+    the installed module for its default display. Repeating setup refreshes both
+    files. Prompts to import the installed module into the current session.
 .PARAMETER ModulePath
     Destination module file. Defaults to
     $HOME\Documents\WindowsPowerShell\Modules\SearchTools.psm1.
@@ -24,13 +25,21 @@ param (
 
 $ErrorActionPreference = 'Stop'
 $sourcePath = Join-Path $PSScriptRoot 'SearchTools.psm1'
+$sourceFormatPath = Join-Path $PSScriptRoot 'SearchTools.format.ps1xml'
 if (-not [IO.File]::Exists($sourcePath)) {
     throw "Cannot find '$sourcePath'. Keep setup.ps1 beside SearchTools.psm1."
+}
+if (-not [IO.File]::Exists($sourceFormatPath)) {
+    throw "Cannot find '$sourceFormatPath'. Keep SearchTools.format.ps1xml beside setup.ps1."
 }
 
 $moduleFullPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ModulePath)
 $pathComparison = if ($IsWindows) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
 [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($moduleFullPath))
+$installedFormatPath = Join-Path ([IO.Path]::GetDirectoryName($moduleFullPath)) 'SearchTools.format.ps1xml'
+if (-not [string]::Equals($sourceFormatPath, $installedFormatPath, $pathComparison)) {
+    [IO.File]::Copy($sourceFormatPath, $installedFormatPath, $true)
+}
 if (-not [string]::Equals($sourcePath, $moduleFullPath, $pathComparison)) {
     [IO.File]::Copy($sourcePath, $moduleFullPath, $true)
 }

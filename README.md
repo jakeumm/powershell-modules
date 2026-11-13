@@ -19,9 +19,10 @@ The default installation places the files directly in:
 ```text
 $HOME\Documents\WindowsPowerShell\Modules\PSHistory.psm1
 $HOME\Documents\WindowsPowerShell\Modules\SearchTools.psm1
+$HOME\Documents\WindowsPowerShell\Modules\SearchTools.format.ps1xml
 ```
 
-These destinations use `WindowsPowerShell` even when setup runs in PowerShell 7. Both installers accept `-ModulePath` to select a different destination file. PSHistory setup also accepts `-ProfilePath` to select a different profile.
+These destinations use `WindowsPowerShell` even when setup runs in PowerShell 7. Both installers accept `-ModulePath` to select a different destination file. SearchTools setup installs its format definition beside the module; keep these two files together. PSHistory setup also accepts `-ProfilePath` to select a different profile.
 
 PSHistory setup adds these settings to the current host's `$PROFILE` when they are missing:
 
@@ -70,6 +71,9 @@ Search-ChildItem '*.log' -Path 'C:\Projects'
 # Find directories instead of files.
 Search-ChildItem '*cache*' -Directory
 
+# Select file properties beyond the default display columns.
+Search-ChildItem '*.log' | Select-Object Extension, Length, FullName
+
 # Include hidden files and limit recursion.
 Search-ChildItem '*.ps1' -Force -Depth 1
 
@@ -79,7 +83,7 @@ Search-ChildItem '*.log' -LiteralPath 'C:\Builds\[latest]'
 
 PSHistory returns `PSHistory.Entry` objects, newest first, or complete command strings with `-AsString`. It reads saved history; timestamps and other execution metadata are not available from that file.
 
-SearchTools returns original `FileInfo` or `DirectoryInfo` objects for further pipeline processing. It skips access-denied errors by default, reports skipped paths with `-Verbose`, and honors an explicit `-ErrorAction`. `-File` and `-Directory` are mutually exclusive.
+SearchTools returns full `FileInfo` or `DirectoryInfo` objects with a default two-column display showing `LastWriteTime` and `FullName`. All properties remain available for downstream selection, filtering, and export. It skips access-denied errors by default, reports skipped paths with `-Verbose`, and honors an explicit `-ErrorAction`. `-File` and `-Directory` are mutually exclusive.
 
 See each module's readme for all parameters, setup options, behavior, and troubleshooting:
 

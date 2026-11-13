@@ -3,8 +3,10 @@ function Search-ChildItem {
     .SYNOPSIS
         Searches recursively for files or directories by name.
     .DESCRIPTION
-        Returns original FileInfo objects by default, or DirectoryInfo objects
-        with Directory. Searches all subdirectories unless Depth limits recursion.
+        Returns full FileInfo objects by default, or DirectoryInfo objects with
+        Directory. The default display shows LastWriteTime and FullName; all
+        properties and methods remain available to downstream commands.
+        Searches all subdirectories unless Depth limits recursion.
         Access-denied errors are skipped by default and reported with Verbose.
         Other errors are reported normally. An explicit ErrorAction or a changed
         ErrorActionPreference controls all errors, including access denied.
@@ -36,7 +38,9 @@ function Search-ChildItem {
     .EXAMPLE
         Search-ChildItem '*.log' -ErrorAction Stop
     .EXAMPLE
-        Search-ChildItem '*.log' | Select-Object LastWriteTime, FullName
+        Search-ChildItem '*.log' | Sort-Object LastWriteTime -Descending
+    .EXAMPLE
+        Search-ChildItem '*.log' | Select-Object Extension, Length, FullName
     #>
     [CmdletBinding(DefaultParameterSetName = 'PathFile')]
     param (
@@ -116,9 +120,14 @@ function Search-ChildItem {
             }
         }
         else {
-            $PSCmdlet.WriteObject($_)
+            if (-not $_.PSTypeNames.Contains('SearchTools.FileSystemItem')) {
+                $_.PSTypeNames.Insert(0, 'SearchTools.FileSystemItem')
+            }
+            $_
         }
     }
 }
+
+Update-FormatData -PrependPath (Join-Path $PSScriptRoot 'SearchTools.format.ps1xml') -ErrorAction Stop
 
 Export-ModuleMember -Function Search-ChildItem

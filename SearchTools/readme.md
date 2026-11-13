@@ -12,7 +12,9 @@ Setup creates the destination directories and installs [SearchTools.psm1](Search
 $HOME\Documents\WindowsPowerShell\Modules\SearchTools.psm1
 ```
 
-The script prompts `Import SearchTools into this session now? [y/N]`. Answer `y` or `yes` to import the installed module into the current session. Press Enter to skip importing and display the command to use later. Repeating setup refreshes the installed module from the source beside the script.
+It also installs [SearchTools.format.ps1xml](SearchTools.format.ps1xml) in the same directory. This file defines the default two-column display and must stay beside the installed module.
+
+The script prompts `Import SearchTools into this session now? [y/N]`. Answer `y` or `yes` to import the installed module into the current session. Press Enter to skip importing and display the command to use later. Repeating setup refreshes both the module and its format file.
 
 The default destination uses the WindowsPowerShell directory even when running PowerShell 7. Override it with `-ModulePath`, which accepts the full destination file path:
 
@@ -20,7 +22,7 @@ The default destination uses the WindowsPowerShell directory even when running P
 .\SearchTools\setup.ps1 -ModulePath 'D:\PowerShell\Modules\SearchTools.psm1'
 ```
 
-Keep `setup.ps1` beside `SearchTools.psm1` when running it. The default installation is a single file directly in `Modules`; import it by full path in future sessions:
+Keep `setup.ps1`, `SearchTools.psm1`, and `SearchTools.format.ps1xml` together when running setup. A custom `-ModulePath` also receives the format file in the module's destination directory. The default installation places the module and format file directly in `Modules`; import the module by full path in future sessions:
 
 ```powershell
 Import-Module (Join-Path $HOME 'Documents\WindowsPowerShell\Modules\SearchTools.psm1')
@@ -85,17 +87,37 @@ The command accepts these parameters:
 
 The filter matches item names, not file contents. Starting paths are resolved before the name filter is applied to the recursive search. Results follow the provider's enumeration order; use `Sort-Object` when you need a particular order.
 
-Results are original `System.IO.FileInfo` objects for files and `System.IO.DirectoryInfo` objects for directories. Properties such as `Name`, `FullName`, `LastWriteTime`, `PSIsContainer`, and file `Length` remain available for pipeline processing:
+Results are full `System.IO.FileInfo` objects for files and `System.IO.DirectoryInfo` objects for directories. Their default table displays these two columns:
+
+| Property | Meaning |
+| --- | --- |
+| `LastWriteTime` | The item's last modification time, as a `DateTime`. |
+| `FullName` | The item's full path. |
+
+All properties and methods remain available downstream, including `Extension`, file `Length`, directory `Parent`, and `PSIsContainer`. The two-column view applies to SearchTools results; explicit selection and formatting control what appears later in a pipeline.
 
 ```powershell
-# Display the same two columns as the earlier version of the function.
-Search-ChildItem '*.log' | Select-Object LastWriteTime, FullName
+# Display the last modification time and full path for each matching file.
+Search-ChildItem '*.log'
 
-# Find the ten largest matching files.
+# Select the original Extension property.
+Search-ChildItem | Select-Object Extension
+
+# Choose additional file properties.
+Search-ChildItem '*.log' | Select-Object Name, Extension, Length, FullName
+
+# Find the ten most recently modified matching files.
 Search-ChildItem '*.log' |
-    Sort-Object Length -Descending |
-    Select-Object -First 10 Name, Length, FullName
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 10
+
+# Export just the two default display properties to CSV.
+Search-ChildItem '*.log' |
+    Select-Object LastWriteTime, FullName |
+    Export-Csv .\log-files.csv -NoTypeInformation
 ```
+
+Default display columns do not restrict exported data. Use `Select-Object` before `Export-Csv` when you want a particular set of columns. Re-run setup and import the refreshed module to update an existing installation.
 
 By default, access-denied errors are skipped so a recursive search can continue through accessible paths. `-Verbose` reports skipped access failures. Other errors, including nonexistent starting paths and non-file-system paths, are reported normally.
 
@@ -122,7 +144,7 @@ Get-Help Search-ChildItem -Full
 Get-Help .\SearchTools\setup.ps1 -Full
 ```
 
-The [test suite](Tests/SearchTools.Tests.ps1) uses temporary file-system fixtures and synthetic permission errors. It covers file-only defaults, directory selection, full output objects, filters, multiple roots, wildcard and literal paths, recursion depth, hidden items, conflicting parameters, and error handling. It has been run with Pester 3.4.0:
+The [test suite](Tests/SearchTools.Tests.ps1) uses temporary file-system fixtures and synthetic permission errors. It covers file-only defaults, directory selection, full output objects, downstream property selection, the default two-column display, filters, multiple roots, wildcard and literal paths, recursion depth, hidden items, conflicting parameters, and error handling. It has been run with Pester 3.4.0:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0

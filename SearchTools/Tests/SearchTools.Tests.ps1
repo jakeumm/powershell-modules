@@ -18,7 +18,7 @@ Describe 'Search-ChildItem file system searches' {
     It 'defaults to recursive file-only results' {
         $items = @(Search-ChildItem -Path $root)
         $items.Count | Should Be 4
-        @($items | Where-Object { $_ -isnot [IO.FileInfo] }).Count | Should Be 0
+        @($items | Where-Object { -not [IO.File]::Exists($_.FullName) }).Count | Should Be 0
     }
 
     It 'uses the current directory when no path is supplied' {
@@ -36,19 +36,52 @@ Describe 'Search-ChildItem file system searches' {
         @(Search-ChildItem -Path $root -File:$false).Count | Should Be 4
     }
 
-    It 'returns original file objects with size and extension properties' {
+    It 'returns full file objects and supports downstream property selection' {
         $item = Search-ChildItem 'root.log' -Path $root
+        $expected = Get-Item -LiteralPath (Join-Path $root 'root.log')
         ($item -is [IO.FileInfo]) | Should Be $true
-        $item.Length | Should Be 4
         $item.Extension | Should Be '.log'
-        $item.PSIsContainer | Should Be $false
+        $item.Length | Should Be 4
+        $item.LastWriteTime | Should Be $expected.LastWriteTime
+        ($item.LastWriteTime -is [datetime]) | Should Be $true
+        $item.FullName | Should Be $expected.FullName
+        $item.OpenRead().Dispose()
+        @(Search-ChildItem 'root.log' -Path $root | Select-Object Extension)[0].Extension | Should Be '.log'
     }
 
     It 'selects directories only and applies the name filter' {
         $items = @(Search-ChildItem -Path $root -Directory)
         $items.Count | Should Be 2
-        @($items | Where-Object { $_ -isnot [IO.DirectoryInfo] }).Count | Should Be 0
-        @(Search-ChildItem '*deep*' -Path $root -Directory)[0].Name | Should Be 'deeper'
+        @($items | Where-Object { -not [IO.Directory]::Exists($_.FullName) }).Count | Should Be 0
+        foreach ($item in $items) {
+            ($item -is [IO.DirectoryInfo]) | Should Be $true
+            $item.PSIsContainer | Should Be $true
+            $item.Parent.FullName | Should Not BeNullOrEmpty
+        }
+        @(Search-ChildItem '*deep*' -Path $root -Directory)[0].FullName | Should Be (Join-Path $root 'nested\deeper')
+    }
+
+    It 'displays only LastWriteTime and FullName by default for files and directories' {
+        $fileOutput = Search-ChildItem 'root.log' -Path $root | Out-String -Width 4096
+        $directoryOutput = Search-ChildItem 'nested' -Path $root -Directory | Out-String -Width 4096
+        foreach ($output in @($fileOutput, $directoryOutput)) {
+            $output | Should Match '(?m)^\s*LastWriteTime\s+FullName\s*$'
+            $output | Should Not Match '(?m)^\s*Mode\s+'
+        }
+        $fileOutput | Should Match ([regex]::Escape((Join-Path $root 'root.log')))
+        $directoryOutput | Should Match ([regex]::Escape((Join-Path $root 'nested')))
+        $selected = Search-ChildItem 'root.log' -Path $root | Select-Object Extension | Out-String
+        $selected | Should Match 'Extension'
+        $selected | Should Not Match 'LastWriteTime'
+    }
+
+    It 'keeps the default Get-Item view when SearchTools results are displayed' {
+        $path = Join-Path $root 'root.log'
+        $before = Get-Item -LiteralPath $path | Out-String -Width 4096
+        $null = Search-ChildItem -Path $root | Out-String -Width 4096
+        $after = Get-Item -LiteralPath $path | Out-String -Width 4096
+        $after | Should Be $before
+        ((Get-Item -LiteralPath $path).PSTypeNames -contains 'SearchTools.FileSystemItem') | Should Be $false
     }
 
     It 'supports Depth zero and one for files and directories' {
@@ -72,7 +105,7 @@ Describe 'Search-ChildItem file system searches' {
         [IO.File]::WriteAllText((Join-Path $literal 'build.log'), 'build')
         @(Search-ChildItem '*.log' -LiteralPath $literal).Count | Should Be 1
         @(Search-ChildItem -LiteralPath $literal -File).Count | Should Be 1
-        @(Search-ChildItem -LiteralPath $literal -Directory)[0].Name | Should Be 'output'
+        @(Search-ChildItem -LiteralPath $literal -Directory)[0].FullName | Should Be (Join-Path $literal 'output')
         @(Search-ChildItem '*.log' -Path (Join-Path $root 'nest*')).Count | Should Be 2
     }
 
@@ -119,7 +152,10 @@ Describe 'Search-ChildItem access-denied handling' {
         function Set-SearchAccessDeniedMock {
             Mock Get-ChildItem {
                 Write-Error 'Synthetic access denied' -Category PermissionDenied -ErrorAction Continue
-                [pscustomobject]@{ Name = 'allowed.txt' }
+                [pscustomobject]@{
+                    LastWriteTime = [datetime]'2026-01-01'
+                    FullName = Join-Path ([IO.Path]::GetTempPath()) 'allowed.txt'
+                }
             } -ModuleName SearchTools
         }
 
@@ -127,7 +163,7 @@ Describe 'Search-ChildItem access-denied handling' {
             Set-SearchAccessDeniedMock
             $items = @(Search-ChildItem 2>&1)
             $items.Count | Should Be 1
-            $items[0].Name | Should Be 'allowed.txt'
+            [IO.Path]::GetFileName($items[0].FullName) | Should Be 'allowed.txt'
         }
 
         It 'reports skipped access-denied paths with Verbose' {
