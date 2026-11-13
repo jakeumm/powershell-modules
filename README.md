@@ -4,6 +4,7 @@
 | --- | --- | --- |
 | [PSHistory](PSHistory/readme.md) | `Get-PSHistory`, `Search-PSHistory` | Retrieve and search existing PSReadLine history across sessions, with multiline support, regex matching, and deduplication. |
 | [SearchTools](SearchTools/readme.md) | `Search-ChildItem` | Search recursively by name, returning files by default or directories with `-Directory`. Supports depth limits, hidden items, and literal paths. |
+| [LinuxAliases](LinuxAliases/readme.md) | `grep`, `touch`, `vi` | Search text with basic grep-style flags, create items with `New-Item`, and launch Vim. Import `LinuxAliases.psm1` directly. |
 
 Run either or both setup scripts from the repository root:
 
@@ -49,6 +50,7 @@ For use directly from a checkout, import the source files:
 ```powershell
 Import-Module .\PSHistory\PSHistory.psm1
 Import-Module .\SearchTools\SearchTools.psm1
+Import-Module .\LinuxAliases\LinuxAliases.psm1
 ```
 
 Try these examples after importing:
@@ -93,6 +95,7 @@ See each module's readme for all parameters, setup options, behavior, and troubl
 
 - [PSHistory documentation](PSHistory/readme.md)
 - [SearchTools documentation](SearchTools/readme.md)
+- [LinuxAliases documentation](LinuxAliases/readme.md)
 
 Built-in help is also available after import:
 
@@ -102,10 +105,11 @@ Get-Help Search-PSHistory -Examples
 Get-Help Search-ChildItem -Full
 ```
 
-The test suites have been run with Pester 3.4.0. With that version installed, run both suites from the repository root:
+The test suites have been run with Pester 3.4.0. With that version installed, run them from the repository root:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0
 Invoke-Pester -Script .\PSHistory\Tests\PSHistory.Tests.ps1
 Invoke-Pester -Script .\SearchTools\Tests\SearchTools.Tests.ps1
+Invoke-Pester -Script .\LinuxAliases\Tests\grep.Tests.ps1
 ```

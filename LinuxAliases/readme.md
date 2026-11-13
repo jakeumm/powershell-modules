@@ -1,12 +1,27 @@
-**LinuxAliases** contains PowerShell helpers with familiar Linux command names. Load the scripts you want by dot-sourcing them from the repository root:
+**LinuxAliases** combines its helpers in a single [LinuxAliases.psm1](LinuxAliases.psm1) module. Import it from the repository root:
 
 ```powershell
-. .\LinuxAliases\grep.ps1
-. .\LinuxAliases\touch.ps1
-. .\LinuxAliases\vi.ps1
+Import-Module .\LinuxAliases\LinuxAliases.psm1
 ```
 
-[grep.ps1](grep.ps1) defines a function supporting a basic set of grep-style flags. Loading it removes the earlier `grep` alias so the function takes precedence. Searches are case-sensitive by default, and results are text strings.
+The module exports these commands:
+
+| Command | Type | Purpose |
+| --- | --- | --- |
+| `grep` | Function | Search text and files with basic grep-style flags. |
+| `touch` | Alias for `New-Item` | Create files or other item types using PowerShell parameters. |
+| `vi` | Alias for `vim` | Open Vim, which must be available through command discovery. |
+
+All three commands become available on import. To load them in future sessions, add an `Import-Module` line to `$PROFILE` using the full module path. Re-import with `-Force` after updating the module.
+
+If you previously loaded the standalone scripts, replace their dot-source lines with the module import. Remove any old aliases in the current scope before importing, particularly the old `grep` alias to `Select-String`:
+
+```powershell
+Remove-Item -LiteralPath Alias:grep, Alias:touch, Alias:vi -Force -ErrorAction SilentlyContinue
+Import-Module .\LinuxAliases\LinuxAliases.psm1 -Force
+```
+
+`grep` supports a basic set of grep-style flags. Searches are case-sensitive by default, and results are text strings.
 
 ```powershell
 # Search pipeline text, ignoring case.
@@ -47,20 +62,20 @@ Explicit file operands take precedence over pipeline input. With no paths, pipe 
 
 This wrapper uses `Select-String` and .NET regular expressions. It implements the listed flags rather than full GNU grep compatibility: GNU basic-regex syntax, binary-file handling, GNU exit codes, and `-` as a stdin file operand are outside its scope. `Get-Help grep -Full` shows built-in help.
 
-[touch.ps1](touch.ps1) aliases `touch` to `New-Item`. Specify the item type when creating a file or directory. Existing-item behavior follows `New-Item`; this alias does not implement Unix timestamp updates.
+`touch` aliases `New-Item`. Specify the item type when creating a file or directory. Existing-item behavior follows `New-Item`; this alias does not implement Unix timestamp updates.
 
 ```powershell
 touch .\new-file.txt -ItemType File
 touch .\new-folder -ItemType Directory
 ```
 
-[vi.ps1](vi.ps1) aliases `vi` to `vim`, which must be installed and available through command discovery, such as on `PATH`.
+`vi` aliases `vim`, which must be installed and available through command discovery, such as on `PATH`.
 
 ```powershell
 vi .\notes.txt
 ```
 
-The [grep tests](Tests/grep.Tests.ps1) cover the supported flags, pipeline and file searches, recursion, combined options, numbering, empty inputs, and error handling. They use Pester 3.4.0:
+The [tests](Tests/grep.Tests.ps1) cover module exports, the `touch` alias, supported grep flags, pipeline and file searches, recursion, combined options, numbering, empty inputs, and error handling. They use Pester 3.4.0:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0

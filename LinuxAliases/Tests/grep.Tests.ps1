@@ -1,5 +1,4 @@
-Set-Alias -Name grep -Value Select-String -Option AllScope
-. (Join-Path $PSScriptRoot '..\grep.ps1')
+Import-Module (Join-Path $PSScriptRoot '..\LinuxAliases.psm1') -Force
 
 Describe 'grep basic Linux-style flags' {
     BeforeEach {
@@ -11,9 +10,22 @@ Describe 'grep basic Linux-style flags' {
         [IO.File]::WriteAllText($nestedFile, "error nested`n")
     }
 
-    It 'replaces the earlier alias with a function' {
+    It 'exports grep as a function' {
         (Get-Command grep).CommandType | Should Be 'Function'
-        (Test-Path Alias:grep) | Should Be $false
+        (Get-Command grep).ModuleName | Should Be 'LinuxAliases'
+    }
+
+    It 'exports only grep and the touch and vi aliases' {
+        (((Get-Module LinuxAliases).ExportedCommands.Keys | Sort-Object) -join ',') | Should Be 'grep,touch,vi'
+        (Get-Alias touch).Definition | Should Be 'New-Item'
+        (Get-Alias vi).Definition | Should Be 'vim'
+    }
+
+    It 'creates a file through the exported touch alias' {
+        $path = Join-Path $root 'created.txt'
+        $created = touch $path -ItemType File
+        ($created -is [IO.FileInfo]) | Should Be $true
+        (Test-Path -LiteralPath $path -PathType Leaf) | Should Be $true
     }
 
     It 'matches case-sensitively by default and returns strings' {

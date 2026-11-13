@@ -1,6 +1,3 @@
-# Remove the earlier alias so the wrapper function takes precedence when loaded.
-if (Test-Path Alias:grep) { Remove-Item Alias:grep -Force }
-
 function grep {
     <#
     .SYNOPSIS
@@ -24,7 +21,7 @@ function grep {
         Uses Select-String and .NET regex syntax, not GNU basic regex syntax.
         Unsupported options raise PowerShell errors. GNU exit codes and other
         options are not implemented. No-path searches require pipeline input
-        unless -r is supplied. Dot-source this script to load the function.
+        unless -r is supplied. Import LinuxAliases.psm1 to load the function.
     .EXAMPLE
         'ERROR: failed', 'ready' | grep -i error
     .EXAMPLE
@@ -156,3 +153,8 @@ function grep {
         }
     }
 }
+
+Set-Alias -Name touch -Value New-Item
+Set-Alias -Name vi -Value vim
+
+Export-ModuleMember -Function grep -Alias touch, vi
