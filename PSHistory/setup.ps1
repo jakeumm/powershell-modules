@@ -5,7 +5,8 @@
     Installs PSHistory and configures persistent PowerShell history.
 .DESCRIPTION
     Copies PSHistory.psm1 to $HOME\Documents\WindowsPowerShell\Modules\PSHistory.psm1
-    and adds missing history settings to the current user's $PROFILE. Existing
+    and PSHistory.format.ps1xml beside the installed module. Adds missing history
+    settings to the current user's $PROFILE. Existing
     profile content and encoding are preserved. Prompts to import the installed
     module into the current session. Profile settings apply the next time that
     profile is loaded.
@@ -27,16 +28,23 @@ param (
 
 $ErrorActionPreference = 'Stop'
 $sourcePath = Join-Path $PSScriptRoot 'PSHistory.psm1'
+$sourceFormatPath = Join-Path $PSScriptRoot 'PSHistory.format.ps1xml'
 if (-not [IO.File]::Exists($sourcePath)) {
     throw "Cannot find '$sourcePath'. Keep setup.ps1 beside PSHistory.psm1."
+}
+if (-not [IO.File]::Exists($sourceFormatPath)) {
+    throw "Cannot find '$sourceFormatPath'. Keep PSHistory.format.ps1xml beside setup.ps1."
 }
 
 $profileFullPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ProfilePath)
 $moduleFullPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ModulePath)
+$installedFormatPath = Join-Path ([IO.Path]::GetDirectoryName($moduleFullPath)) 'PSHistory.format.ps1xml'
 $pathComparison = if ($IsWindows) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
 if ([string]::Equals($profileFullPath, $moduleFullPath, $pathComparison) -or
-    [string]::Equals($profileFullPath, $sourcePath, $pathComparison)) {
-    throw 'The profile path must be different from the module file paths.'
+    [string]::Equals($profileFullPath, $sourcePath, $pathComparison) -or
+    [string]::Equals($profileFullPath, $installedFormatPath, $pathComparison) -or
+    [string]::Equals($profileFullPath, $sourceFormatPath, $pathComparison)) {
+    throw 'The profile path must be different from the module and format file paths.'
 }
 
 # StreamReader detects an existing BOM so appending also works for UTF-16/32
@@ -67,6 +75,9 @@ $missingSettings = @(
 )
 
 [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($moduleFullPath))
+if (-not [string]::Equals($sourceFormatPath, $installedFormatPath, $pathComparison)) {
+    [IO.File]::Copy($sourceFormatPath, $installedFormatPath, $true)
+}
 if (-not [string]::Equals($sourcePath, $moduleFullPath, $pathComparison)) {
     [IO.File]::Copy($sourcePath, $moduleFullPath, $true)
 }

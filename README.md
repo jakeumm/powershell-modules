@@ -18,11 +18,12 @@ The default installation places the files directly in:
 
 ```text
 $HOME\Documents\WindowsPowerShell\Modules\PSHistory.psm1
+$HOME\Documents\WindowsPowerShell\Modules\PSHistory.format.ps1xml
 $HOME\Documents\WindowsPowerShell\Modules\SearchTools.psm1
 $HOME\Documents\WindowsPowerShell\Modules\SearchTools.format.ps1xml
 ```
 
-These destinations use `WindowsPowerShell` even when setup runs in PowerShell 7. Both installers accept `-ModulePath` to select a different destination file. SearchTools setup installs its format definition beside the module; keep these two files together. PSHistory setup also accepts `-ProfilePath` to select a different profile.
+These destinations use `WindowsPowerShell` even when setup runs in PowerShell 7. Both installers accept `-ModulePath` to select a different destination file and install their format definition beside the module; keep each module and its format file together. PSHistory setup also accepts `-ProfilePath` to select a different profile.
 
 PSHistory setup adds these settings to the current host's `$PROFILE` when they are missing:
 
@@ -62,6 +63,9 @@ Search-PSHistory 'git commit' -Last 20 -Unique
 # Search history with a regular expression.
 Search-PSHistory '^Get-\w+' -Regex
 
+# Select history metadata beyond the default CommandLine display.
+Search-PSHistory 'git' | Select-Object EntryNumber, SourcePath, CommandLine
+
 # Copy the newest matching command to the clipboard.
 Search-PSHistory 'docker' -Last 1 -AsString | Set-Clipboard
 
@@ -81,7 +85,7 @@ Search-ChildItem '*.ps1' -Force -Depth 1
 Search-ChildItem '*.log' -LiteralPath 'C:\Builds\[latest]'
 ```
 
-PSHistory returns `PSHistory.Entry` objects, newest first, or complete command strings with `-AsString`. It reads saved history; timestamps and other execution metadata are not available from that file.
+PSHistory returns full `PSHistory.Entry` objects, newest first, with a default display showing only `CommandLine`. Metadata such as `EntryNumber` and `SourcePath` remains available downstream. Use `-AsString` for complete command strings. It reads saved history; timestamps and other execution metadata are not available from that file.
 
 SearchTools returns full `FileInfo` or `DirectoryInfo` objects with a default two-column display showing `LastWriteTime` and `FullName`. All properties remain available for downstream selection, filtering, and export. It skips access-denied errors by default, reports skipped paths with `-Verbose`, and honors an explicit `-ErrorAction`. `-File` and `-Directory` are mutually exclusive.
 

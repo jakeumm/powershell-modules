@@ -14,6 +14,8 @@ The script copies [PSHistory.psm1](PSHistory.psm1) to:
 $HOME\Documents\WindowsPowerShell\Modules\PSHistory.psm1
 ```
 
+It also installs [PSHistory.format.ps1xml](PSHistory.format.ps1xml) beside the module. This file supplies the default `CommandLine`-only display and must stay with the installed module, including when using a custom `-ModulePath`.
+
 It creates the destination directories and the current host's `$PROFILE` if needed, then appends any missing settings:
 
 ```powershell
@@ -22,7 +24,7 @@ Set-PSReadLineOption -MaximumHistoryCount 10000
 Set-PSReadLineOption -HistorySaveStyle SaveIncrementally
 ```
 
-Existing profile content is retained, and BOM-marked encodings are detected and preserved. A new profile uses UTF-8 without a BOM. Repeating setup refreshes the installed module and skips settings already present in the recognized form.
+Existing profile content is retained, and BOM-marked encodings are detected and preserved. A new profile uses UTF-8 without a BOM. Repeating setup refreshes the module and format file and skips settings already present in the recognized form.
 
 Setup prompts `Import PSHistory into this session now? [y/N]`. Answer `y` or `yes` to import it into the current session; Enter skips the import. The profile settings take effect when the profile next loads, such as when you open a new shell. Importing the module alone does not apply those settings.
 
@@ -33,7 +35,7 @@ Setup updates the profile for the PowerShell host running it. The default module
 | `-ProfilePath` | `$PROFILE` | Select a different profile file. |
 | `-ModulePath` | `$HOME\Documents\WindowsPowerShell\Modules\PSHistory.psm1` | Select a different destination module file. |
 
-Keep [setup.ps1](setup.ps1) beside the source module when running it.
+Keep [setup.ps1](setup.ps1), `PSHistory.psm1`, and `PSHistory.format.ps1xml` together when running setup.
 
 To import the default installation later, use its full path:
 
@@ -41,7 +43,7 @@ To import the default installation later, use its full path:
 Import-Module (Join-Path $HOME 'Documents\WindowsPowerShell\Modules\PSHistory.psm1')
 ```
 
-Setup installs a single module file directly in `Modules`, so the full-path import is the documented way to load it. Setup adds only the history settings to the profile. To load PSHistory automatically in future sessions, also add the import line above to your profile. If you supplied `-ModulePath`, use that path instead.
+Setup installs the module and format file directly in `Modules`, so the full-path import is the documented way to load it. Setup adds only the history settings to the profile. To load PSHistory automatically in future sessions, also add the import line above to your profile. If you supplied `-ModulePath`, use that path instead.
 
 You can also use the module directly from the repository without running setup:
 
@@ -105,7 +107,7 @@ Search defaults to a literal, case-insensitive substring match. Characters such 
 
 Filtering and optional deduplication happen before the result limit. For example, `Search-PSHistory 'git' -Last 10` searches the file for the newest ten matches, even if the ten newest entries contain no Git commands. Case-sensitive deduplication is independent of the search's case setting.
 
-By default, each result is a `PSHistory.Entry` object with these properties:
+Both `Search-PSHistory` and `Get-PSHistory` display only `CommandLine` by default, with multiline commands wrapped for readability. Each result remains a full `PSHistory.Entry` object with these properties:
 
 | Property | Meaning |
 | --- | --- |
@@ -115,12 +117,15 @@ By default, each result is a `PSHistory.Entry` object with these properties:
 | `StartLine` | One-based first physical file line for the record. |
 | `EndLine` | One-based last physical file line for the record. |
 
-Use normal PowerShell formatting to inspect or select properties:
+Use normal PowerShell formatting to inspect or select properties beyond the default display:
 
 ```powershell
 Get-PSHistory -Last 1 | Format-List *
 Search-PSHistory 'git' | Select-Object EntryNumber, CommandLine
+Search-PSHistory 'git' | Select-Object SourcePath, StartLine, EndLine
 ```
+
+The display does not restrict pipeline data or exported columns. `Export-Csv` receives all entry properties unless you select a subset first. `-AsString` returns plain command strings without a table header. Re-run setup and import the refreshed module to update an existing installation.
 
 `EntryNumber` is a position in the source file and can change if the file is rewritten. It is separate from the session IDs used by `Get-History` and `Invoke-History`. Results are ordered by file position; they do not establish execution order across concurrent shells. PSHistory does not provide timestamps, duration, exit status, working directory, or originating session because that metadata is absent from the persisted command text.
 
@@ -158,7 +163,7 @@ Get-Help Search-PSHistory -Examples
 Get-Help .\PSHistory\setup.ps1 -Full
 ```
 
-The [test suite](Tests/PSHistory.Tests.ps1) uses synthetic history files and covers retrieval, search, limits, deduplication, multiline input, Unicode, path discovery, concurrent appends, and error handling. It has been run with Pester 3.4.0. To run it from the repository root with that version installed:
+The [test suite](Tests/PSHistory.Tests.ps1) uses synthetic history files and covers retrieval, search, limits, deduplication, multiline input, Unicode, the command-line-only default display, downstream metadata selection, path discovery, concurrent appends, and error handling. It has been run with Pester 3.4.0. To run it from the repository root with that version installed:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0

@@ -40,6 +40,46 @@ Describe 'PSHistory persistent history queries' {
         $entries[-1].CommandLine | Should Be 'command 11'
     }
 
+    It 'displays only CommandLine by default and wraps multiline commands' {
+        $path = New-TestHistory -Commands "git first line`nMULTILINE_END_MARKER"
+        $searchOutput = Search-PSHistory 'git' -Path $path | Out-String -Width 80
+        $getOutput = Get-PSHistory -Path $path | Out-String -Width 80
+        foreach ($output in @($searchOutput, $getOutput)) {
+            $output | Should Match '(?m)^\s*CommandLine\s*$'
+            $output | Should Match 'git first line'
+            $output | Should Match 'MULTILINE_END_MARKER'
+            $output | Should Not Match 'SourcePath|EntryNumber|StartLine|EndLine'
+        }
+    }
+
+    It 'preserves full search entry metadata for downstream selection and export' {
+        $path = New-TestHistory -Commands 'git first', 'git second'
+        $entry = Search-PSHistory 'git' -Path $path -Last 1
+        $entry.PSTypeNames[0] | Should Be 'PSHistory.Entry'
+        $entry.EntryNumber | Should Be 2
+        $entry.SourcePath | Should Be $path
+        $entry.StartLine | Should Be 2
+        $entry.EndLine | Should Be 2
+        $selected = Search-PSHistory 'git' -Path $path -Last 1 | Select-Object EntryNumber, SourcePath
+        $selected.EntryNumber | Should Be 2
+        $selected.SourcePath | Should Be $path
+        $allProperties = $entry | Format-List * | Out-String -Width 4096
+        $allProperties | Should Match 'SourcePath\s*:'
+        $allProperties | Should Match 'EntryNumber\s*:'
+        $csv = @($entry | ConvertTo-Csv -NoTypeInformation)
+        $csv[0] | Should Match 'CommandLine'
+        $csv[0] | Should Match 'SourcePath'
+        $csv[0] | Should Match 'EntryNumber'
+    }
+
+    It 'keeps AsString output as plain command text with no display header' {
+        $path = New-TestHistory -Commands 'git status'
+        $command = Search-PSHistory 'git' -Path $path -AsString
+        ($command -is [string]) | Should Be $true
+        $command | Should Be 'git status'
+        ($command | Out-String).Trim() | Should Be 'git status'
+    }
+
     It 'limits matching commands rather than searching only the newest entries' {
         $path = New-TestHistory -Commands 'git old', 'git recent', 'unrelated'
         @(Search-PSHistory 'git' -Path $path -Last 1 -AsString)[0] | Should Be 'git recent'

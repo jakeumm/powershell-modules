@@ -208,6 +208,8 @@ function Get-PSHistory {
         Multiline commands are returned as single PSHistory.Entry objects. Only
         complete, newline-terminated records present when the file is opened are
         included. The source file and PSReadLine settings are left unchanged.
+        The default display shows only CommandLine. All entry properties remain
+        available for downstream selection, formatting, and export.
 
         Results reflect file order. EntryNumber is a file position, not a session
         history ID. Persisted history has no per-command timestamps or exit status.
@@ -258,6 +260,8 @@ function Search-PSHistory {
         regular expressions with a one-second timeout per command. Matching uses
         complete decoded commands, including embedded newlines. Filtering and
         optional deduplication happen before the result limit.
+        Returns full PSHistory.Entry objects with a CommandLine-only default
+        display. Use AsString for plain command text instead of entry objects.
     .PARAMETER Pattern
         Text to find. An empty string matches every command. Wildcards are literal.
     .PARAMETER Regex
@@ -280,6 +284,8 @@ function Search-PSHistory {
         Search-PSHistory '^Get-\w+' -Regex -Last 20
     .EXAMPLE
         Search-PSHistory 'docker' -Last 1 -AsString | Set-Clipboard
+    .EXAMPLE
+        Search-PSHistory 'git' | Select-Object EntryNumber, SourcePath, CommandLine
     #>
     [CmdletBinding(DefaultParameterSetName = 'Last')]
     param (
@@ -306,5 +312,7 @@ function Search-PSHistory {
 
     Select-PSHistoryEntry @PSBoundParameters
 }
+
+Update-FormatData -PrependPath (Join-Path $PSScriptRoot 'PSHistory.format.ps1xml') -ErrorAction Stop
 
 Export-ModuleMember -Function Get-PSHistory, Search-PSHistory
