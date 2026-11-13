@@ -1,23 +1,23 @@
-This README documents the helpers originally staged in **temp**. The standalone CLI helpers now live in [CLIMacros](../CLIMacros), policy reporting lives in [GroupPolicy](../GroupPolicy), and `grep`, `touch`, and `vi` are combined in the [LinuxAliases module](../LinuxAliases/readme.md).
+This README documents the helpers originally staged in **temp**. The CLI helpers are combined in the [CLIMacros module](../CLIMacros/readme.md), policy reporting lives in [GroupPolicy](../GroupPolicy), and `grep`, `touch`, and `vi` are combined in the [LinuxAliases module](../LinuxAliases/readme.md). The Notepad++ launcher remains in [notepad.ps1](notepad.ps1) here in `temp`.
 
-Dot-source the standalone scripts you want to use, or import `LinuxAliases.psm1`, to make their commands available in the current session. The examples below assume you are in the repository root. To load a helper in future sessions, add its dot-source or import command to `$PROFILE`, using the full path.
+Import the modules or dot-source the remaining standalone scripts to make their commands available in the current session. The examples below assume you are in the repository root. To load a helper in future sessions, add its dot-source or import command to `$PROFILE`, using the full path.
 
 | Helper | Command defined | What it does |
 | --- | --- | --- |
-| [Copy-Path.ps1](../CLIMacros/Copy-Path.ps1) | `Copy-Path` | Copies a double-quoted path to the clipboard and returns the same string. |
+| [CLIMacros.psm1](../CLIMacros/CLIMacros.psm1) | `Copy-Path` | Copies a double-quoted path to the clipboard and returns the same string. |
 | [Get-GroupPolicy.ps1](../GroupPolicy/Get-GroupPolicy.ps1) | `Get-GroupPolicy` | Refreshes Group Policy, generates an HTML report, and opens it. |
-| [cd-lnk-shortcuts.ps1](../CLIMacros/cd-lnk-shortcuts.ps1) | `cd` function and argument completer | Changes directory through a Windows `.lnk` shortcut or a normal path. |
-| [findstr.ps1](../CLIMacros/findstr.ps1) | `findstr` function | Sends pipeline input to `findstr.exe` with case-insensitive matching. |
+| [CLIMacros.psm1](../CLIMacros/CLIMacros.psm1) | `cd` function and argument completer | Changes directory through a Windows `.lnk` shortcut or a normal path. |
+| [CLIMacros.psm1](../CLIMacros/CLIMacros.psm1) | `findstr` function | Sends pipeline input to `findstr.exe` with case-insensitive matching. |
 | [LinuxAliases.psm1](../LinuxAliases/LinuxAliases.psm1) | `grep` function | Searches text and files with basic grep-style flags. |
-| [notepad.ps1](../CLIMacros/notepad.ps1) | `notepad` alias | Opens Notepad++ through `notepad++.exe`. |
-| [pwd.ps1](../CLIMacros/pwd.ps1) | `pwd` function | Copies the current provider path to the clipboard and returns it. |
+| [notepad.ps1](notepad.ps1) | `notepad` alias | Opens Notepad++ through `notepad++.exe`. |
+| [CLIMacros.psm1](../CLIMacros/CLIMacros.psm1) | `pwd` function | Copies the current provider path to the clipboard and returns it. |
 | [LinuxAliases.psm1](../LinuxAliases/LinuxAliases.psm1) | `touch` alias | Calls `New-Item` to create files or other item types. |
 | [LinuxAliases.psm1](../LinuxAliases/LinuxAliases.psm1) | `vi` alias | Opens Vim through `vim`. |
 
-[Copy-Path.ps1](../CLIMacros/Copy-Path.ps1) defines `Copy-Path [-Path <string>]`. With no path, or a blank path, it uses the current location. With a supplied path, it checks that the item exists and retrieves its full path. Both forms copy and output the path surrounded by double quotes.
+The [CLIMacros module](../CLIMacros/CLIMacros.psm1) exports `Copy-Path [-Path <string>]`. With no path, or a blank path, it uses the current location. With a supplied path, it checks that the item exists and retrieves its full path. Both forms copy and output the path surrounded by double quotes.
 
 ```powershell
-. .\CLIMacros\Copy-Path.ps1
+Import-Module .\CLIMacros\CLIMacros.psm1
 
 Copy-Path
 Copy-Path '.\README.md'
@@ -51,24 +51,24 @@ The default filename is `yyyy-MM-dd-HHmmss-GPResult.html`. Custom folders must a
 
 This helper requires Windows, `gpupdate.exe`, `gpresult.exe`, and an application associated with HTML files. It refreshes policy as part of generating the report. Its path classification uses `[IO.Path]::HasExtension()`, so a folder name containing a dot can be interpreted as a filename; use a full report filename under such a folder. The function does not check native command exit codes before attempting to open the report.
 
-[cd-lnk-shortcuts.ps1](../CLIMacros/cd-lnk-shortcuts.ps1) defines a `cd` function. For a target ending in lowercase `.lnk`, it resolves the shortcut with the Windows `WScript.Shell` COM object and passes its `TargetPath` to `Set-Location`. Other targets go directly to `Set-Location`.
+The [CLIMacros module](../CLIMacros/CLIMacros.psm1) exports a `cd` function. For a target ending in lowercase `.lnk`, it resolves the shortcut with the Windows `WScript.Shell` COM object and passes its `TargetPath` to `Set-Location`. Other targets go directly to `Set-Location`.
 
 PowerShell's built-in `cd` alias takes precedence over a function with the same name. To use this function as `cd`, load it and remove that alias in the current scope:
 
 ```powershell
-. .\CLIMacros\cd-lnk-shortcuts.ps1
 Remove-Item Alias:cd -Force
+Import-Module .\CLIMacros\CLIMacros.psm1
 
 cd '.\Project.lnk'
 cd 'C:\Projects'
 ```
 
-Loading the script also registers argument completion for `cd`. It suggests `.lnk` files from the current directory using the typed prefix. Shortcut targets must be directories. The function expects a target argument, and its `.lnk` suffix check is case-sensitive. The completer inserts bare filenames, so quote names containing spaces when invoking the command. Shortcut resolution requires Windows COM support.
+Importing the module also registers argument completion for `cd` and `CLIMacros\cd`. It suggests `.lnk` files from the current directory using the typed prefix. Shortcut targets must be directories. The function expects a target argument, and its `.lnk` suffix check is case-sensitive. The completer inserts bare filenames, so quote names containing spaces when invoking the command. Shortcut resolution requires Windows COM support.
 
-[findstr.ps1](../CLIMacros/findstr.ps1) defines a wrapper that pipes `$input` to `findstr.exe /i` and forwards all supplied arguments. Matching is case-insensitive because `/i` is always supplied. Additional patterns and flags follow the native `findstr.exe` syntax; results are matching text lines.
+The [CLIMacros module](../CLIMacros/CLIMacros.psm1) exports a `findstr` wrapper that pipes `$input` to `findstr.exe /i` and forwards all supplied arguments. Matching is case-insensitive because `/i` is always supplied. Additional patterns and flags follow the native `findstr.exe` syntax; results are matching text lines.
 
 ```powershell
-. .\CLIMacros\findstr.ps1
+Import-Module .\CLIMacros\CLIMacros.psm1
 
 'ERROR: failed', 'INFO: ready' | findstr 'error'
 Get-Content '.\application.log' | findstr /n 'error'
@@ -85,20 +85,20 @@ grep -i error '.\application.log'
 'alpha', 'beta' | grep -F alpha
 ```
 
-[notepad.ps1](../CLIMacros/notepad.ps1) aliases `notepad` to `notepad++.exe`. Notepad++ must be installed and its executable available through command discovery, such as on `PATH`.
+[notepad.ps1](notepad.ps1) aliases `notepad` to `notepad++.exe`. Notepad++ must be installed and its executable available through command discovery, such as on `PATH`.
 
 ```powershell
-. .\CLIMacros\notepad.ps1
+. .\temp\notepad.ps1
 
 notepad '.\notes.txt'
 ```
 
-[pwd.ps1](../CLIMacros/pwd.ps1) removes an existing `pwd` alias when loaded and defines a function in its place. Each call obtains `Get-Location`, copies its `ProviderPath` to the clipboard, and returns that path as a string. The actual value is unquoted, despite the script's comments describing it as quoted.
+The [CLIMacros module](../CLIMacros/CLIMacros.psm1) exports a `pwd` function. Each call obtains `Get-Location`, copies its `ProviderPath` to the clipboard, and returns that path as an unquoted string. Use the module-qualified name or remove the built-in `pwd` alias to activate the short name.
 
 ```powershell
-. .\CLIMacros\pwd.ps1
+Import-Module .\CLIMacros\CLIMacros.psm1
 
-pwd
+CLIMacros\pwd
 ```
 
 This changes the clipboard on each call and requires `Set-Clipboard` support. The returned value is the current provider path rather than a `PathInfo` object.

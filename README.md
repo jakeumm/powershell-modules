@@ -5,8 +5,9 @@
 | [PSHistory](PSHistory/readme.md) | `Get-PSHistory`, `Search-PSHistory` | Retrieve and search existing PSReadLine history across sessions, with multiline support, regex matching, and deduplication. |
 | [SearchTools](SearchTools/readme.md) | `Search-ChildItem` | Search recursively by name, returning files by default or directories with `-Directory`. Supports depth limits, hidden items, and literal paths. |
 | [LinuxAliases](LinuxAliases/readme.md) | `grep`, `touch`, `vi` | Search text with basic grep-style flags, create items with `New-Item`, and launch Vim. |
+| [CLIMacros](CLIMacros/readme.md) | `Copy-Path`, `pwd`, `cd`, `findstr` | Copy paths to the clipboard, navigate through Windows shortcuts, and filter text case-insensitively. |
 
-Run the setup scripts for the modules you want from the repository root:
+Setup scripts are available for PSHistory, SearchTools, and LinuxAliases. Run the ones you want from the repository root:
 
 ```powershell
 .\PSHistory\setup.ps1
@@ -54,6 +55,7 @@ For use directly from a checkout, import the source files:
 Import-Module .\PSHistory\PSHistory.psm1
 Import-Module .\SearchTools\SearchTools.psm1
 Import-Module .\LinuxAliases\LinuxAliases.psm1
+Import-Module .\CLIMacros\CLIMacros.psm1
 ```
 
 Try these examples after importing:
@@ -91,17 +93,26 @@ Search-ChildItem '*.log' -LiteralPath 'C:\Builds\[latest]'
 
 # Search pipeline text using grep-style ignore-case and line-number flags.
 'INFO: ready', 'ERROR: failed' | grep -in error
+
+# Copy a quoted full path to the clipboard.
+Copy-Path .\README.md
+
+# Use a macro even while PowerShell's built-in pwd alias is present.
+CLIMacros\pwd
 ```
 
 PSHistory returns full `PSHistory.Entry` objects, newest first, with a default display showing only `CommandLine`. Metadata such as `EntryNumber` and `SourcePath` remains available downstream. Use `-AsString` for complete command strings. It reads saved history; timestamps and other execution metadata are not available from that file.
 
 SearchTools returns full `FileInfo` or `DirectoryInfo` objects with a default two-column display showing `LastWriteTime` and `FullName`. All properties remain available for downstream selection, filtering, and export. It skips access-denied errors by default, reports skipped paths with `-Verbose`, and honors an explicit `-ErrorAction`. `-File` and `-Directory` are mutually exclusive.
 
+CLIMacros is imported directly from its `.psm1` file. `Copy-Path` and the `pwd` macro update the clipboard. Use `CLIMacros\cd` and `CLIMacros\pwd`, or remove the built-in `cd` and `pwd` aliases in the current scope to activate those short names; the [CLIMacros README](CLIMacros/readme.md) shows the import commands. Shortcut resolution and `findstr.exe` require Windows.
+
 See each module's readme for all parameters, setup options, behavior, and troubleshooting:
 
 - [PSHistory documentation](PSHistory/readme.md)
 - [SearchTools documentation](SearchTools/readme.md)
 - [LinuxAliases documentation](LinuxAliases/readme.md)
+- [CLIMacros documentation](CLIMacros/readme.md)
 
 Built-in help is also available after import:
 
@@ -111,6 +122,7 @@ Get-Help Search-PSHistory -Examples
 Get-Help Search-ChildItem -Full
 Get-Help grep -Full
 Get-Help .\LinuxAliases\setup.ps1 -Full
+Get-Help Copy-Path -Full
 ```
 
 The test suites have been run with Pester 3.4.0. With that version installed, run them from the repository root:
@@ -120,4 +132,5 @@ Import-Module Pester -RequiredVersion 3.4.0
 Invoke-Pester -Script .\PSHistory\Tests\PSHistory.Tests.ps1
 Invoke-Pester -Script .\SearchTools\Tests\SearchTools.Tests.ps1
 Invoke-Pester -Script .\LinuxAliases\Tests\grep.Tests.ps1
+Invoke-Pester -Script .\CLIMacros\Tests\CLIMacros.Tests.ps1
 ```
