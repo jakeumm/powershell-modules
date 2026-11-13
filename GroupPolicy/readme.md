@@ -6,6 +6,8 @@ Import this repository's module by its file path:
 Import-Module .\GroupPolicy\GroupPolicy.psm1 -Force
 ```
 
+Use the explicit file path to select this repository's helper on computers that also have Microsoft's [GroupPolicy module](https://learn.microsoft.com/en-us/powershell/module/grouppolicy/) installed. To load this helper in future sessions, add an import using the absolute path to your checkout to `$PROFILE`.
+
 Run locally using the existing workflow:
 
 ```powershell
@@ -23,6 +25,13 @@ Get-GroupPolicy -ComputerName PC01 -Path '\\PC01\c$\Reports' -Name 'Policy.html'
 
 # The equivalent target-local filename.
 Get-GroupPolicy -ComputerName PC01 -Path 'C:\Reports\Policy.html'
+```
+
+For a variable computer name, use a double-quoted UNC path so PowerShell expands the name:
+
+```powershell
+$computerName = 'PC01'
+Get-GroupPolicy -ComputerName $computerName -Path "\\$computerName\c$\Reports" -Name 'Policy.html'
 ```
 
 Remote `-Path` is interpreted on the target computer. A UNC administrative share such as `\\PC01\c$\Reports` is converted to `C:\Reports` before the command is sent. The share hostname must match `-ComputerName`. Absolute paths on other drives work as well, with the report opened through the corresponding drive share, such as `D:\Reports` becoming `\\PC01\d$\Reports`.
@@ -60,6 +69,16 @@ Remote calls default to computer policy because the remoting account may have no
 Windows `gpupdate.exe` and `gpresult.exe` are required on the computer processing the request. Remote execution requires configured PowerShell remoting and sufficient permissions for policy processing. Opening the resulting UNC path requires SMB connectivity and administrative-share access from the caller using the current account. The command uses the current account for remoting and share access.
 
 The refresh uses `/force`, with `/target:user` or `/target:computer` for a single scope. The report uses `/h` and the matching `/scope` when selected. A nonzero native exit code stops processing. A missing report is an error; if the report exists remotely but cannot be reached through its share, the error includes both its target-local path and UNC path. Existing reports are not forcibly overwritten.
+
+Common failures and the next checks are:
+
+| Failure | What to check |
+| --- | --- |
+| `Invoke-Command` cannot connect or access is denied | Verify the target's PowerShell remoting configuration and the current account's remote execution permissions. |
+| Report was created but its UNC path is inaccessible | Use the paths in the error to locate the saved report. Check SMB connectivity and access to the target's drive administrative share. |
+| User RSoP data is unavailable | Use `-Scope Computer` for machine policy, or request user policy with an account that has the needed RSoP data on the target. |
+| Custom directory does not exist | Create the folder on the computer generating the report, or omit `-Path` to use the automatically created default folder. |
+| A report already exists at the selected filename | Choose another `-Name`; the function does not request forced overwriting. |
 
 Microsoft documents the underlying behavior in [gpupdate](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/gpupdate), [gpresult](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/gpresult), and [Invoke-Command](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/invoke-command).
 

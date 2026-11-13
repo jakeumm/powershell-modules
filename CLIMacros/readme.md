@@ -20,7 +20,16 @@ Remove-Item -LiteralPath Alias:cd, Alias:pwd -Force -ErrorAction SilentlyContinu
 Import-Module .\CLIMacros\CLIMacros.psm1 -Force
 ```
 
-You can also call `CLIMacros\cd` or `CLIMacros\pwd` directly after import. To load the macros in future sessions, put the alias-removal and import commands in `$PROFILE`, using the full path to the module. Replace any old dot-source lines for the four standalone scripts with that module import.
+You can also call `CLIMacros\cd` or `CLIMacros\pwd` directly after import. Replace any old dot-source lines for the four standalone scripts with the module import.
+
+To activate the short names in future sessions, add the following to `$PROFILE`, adjusting the absolute module path to your checkout:
+
+```powershell
+Remove-Item -LiteralPath Alias:cd, Alias:pwd -Force -ErrorAction SilentlyContinue
+Import-Module 'C:\Projects\powershell-modules\CLIMacros\CLIMacros.psm1'
+```
+
+For module-qualified calls, the profile needs only the import line. After updating the checkout, re-import the module with `-Force` to refresh its functions and shortcut completer.
 
 `Copy-Path [-Path <string>]` copies and outputs a path surrounded by double quotes. No argument, an empty string, or whitespace selects the current location. A supplied path must exist; a missing path prints a red host message and returns without updating the clipboard.
 

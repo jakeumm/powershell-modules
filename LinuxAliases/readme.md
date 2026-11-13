@@ -1,4 +1,12 @@
-**LinuxAliases** combines its helpers in a single [LinuxAliases.psm1](LinuxAliases.psm1) module. Run [setup.ps1](setup.ps1) in PowerShell 7 or later from the repository root:
+**LinuxAliases** combines its helpers in a single [LinuxAliases.psm1](LinuxAliases.psm1) module, exporting `grep`, `touch`, and `vi`.
+
+If you previously loaded the standalone scripts, replace their dot-source lines in `$PROFILE` with the module import. Before running setup or importing in an existing session, remove the old aliases in your current scope, particularly the old `grep` alias to `Select-String`:
+
+```powershell
+Remove-Item -LiteralPath Alias:grep, Alias:touch, Alias:vi -Force -ErrorAction SilentlyContinue
+```
+
+Run [setup.ps1](setup.ps1) in PowerShell 7 or later from the repository root:
 
 ```powershell
 .\LinuxAliases\setup.ps1
@@ -40,14 +48,7 @@ The module exports these commands:
 | `touch` | Alias for `New-Item` | Create files or other item types using PowerShell parameters. |
 | `vi` | Alias for `vim` | Open Vim, which must be available through command discovery. |
 
-All three commands become available on import. Re-import with `-Force` after updating the module.
-
-If you previously loaded the standalone scripts, replace their dot-source lines with the module import. Remove any old aliases in the current scope before importing, particularly the old `grep` alias to `Select-String`:
-
-```powershell
-Remove-Item -LiteralPath Alias:grep, Alias:touch, Alias:vi -Force -ErrorAction SilentlyContinue
-Import-Module .\LinuxAliases\LinuxAliases.psm1 -Force
-```
+All three commands become available on import. After updating the checkout, re-run setup to refresh an installed copy, then import that installed copy with `-Force`. For direct checkout use, re-import the source module with `-Force`.
 
 `grep` supports a basic set of grep-style flags. Searches are case-sensitive by default, and results are text strings.
 

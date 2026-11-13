@@ -60,6 +60,8 @@ Import-Module .\CLIMacros\CLIMacros.psm1
 Import-Module .\GroupPolicy\GroupPolicy.psm1
 ```
 
+CLIMacros and GroupPolicy use these direct imports. To load either in future sessions, add its import to `$PROFILE` with an absolute path to your checkout. The module READMEs include alias activation and migration instructions for existing CLIMacros and LinuxAliases users.
+
 Try these examples after importing:
 
 ```powershell
@@ -104,6 +106,10 @@ CLIMacros\pwd
 
 # Refresh remote computer policy and open its HTML report through C$.
 Get-GroupPolicy -ComputerName PC01
+
+# Save the remote report in an existing folder on that computer.
+$computerName = 'PC01'
+Get-GroupPolicy -ComputerName $computerName -Path "\\$computerName\c$\Reports" -Name 'Policy.html'
 ```
 
 PSHistory returns full `PSHistory.Entry` objects, newest first, with a default display showing only `CommandLine`. Metadata such as `EntryNumber` and `SourcePath` remains available downstream. Use `-AsString` for complete command strings. It reads saved history; timestamps and other execution metadata are not available from that file.
@@ -111,6 +117,8 @@ PSHistory returns full `PSHistory.Entry` objects, newest first, with a default d
 SearchTools returns full `FileInfo` or `DirectoryInfo` objects with a default two-column display showing `LastWriteTime` and `FullName`. All properties remain available for downstream selection, filtering, and export. It skips access-denied errors by default, reports skipped paths with `-Verbose`, and honors an explicit `-ErrorAction`. `-File` and `-Directory` are mutually exclusive.
 
 CLIMacros is imported directly from its `.psm1` file. `Copy-Path` and the `pwd` macro update the clipboard. Use `CLIMacros\cd` and `CLIMacros\pwd`, or remove the built-in `cd` and `pwd` aliases in the current scope to activate those short names; the [CLIMacros README](CLIMacros/readme.md) shows the import commands. Shortcut resolution and `findstr.exe` require Windows.
+
+GroupPolicy runs `gpupdate.exe` and `gpresult.exe` locally or through `Invoke-Command -ComputerName`. Remote calls use the current account and require PowerShell remoting plus SMB administrative-share access. Reports default to both user and computer policy locally and computer policy remotely; select `-Scope Both`, `User`, or `Computer` explicitly when needed. Custom report folders must already exist on the computer processing the request.
 
 See each module's readme for all parameters, setup options, behavior, and troubleshooting:
 
@@ -129,6 +137,7 @@ Get-Help Search-ChildItem -Full
 Get-Help grep -Full
 Get-Help .\LinuxAliases\setup.ps1 -Full
 Get-Help Copy-Path -Full
+Get-Help Get-GroupPolicy -Full
 ```
 
 Planning documents, `Test`/`Tests` folders, and the root `temp` folder are ignored by Git. Test suites and temporary files are kept locally and are not included in a fresh checkout.
