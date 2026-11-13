@@ -163,7 +163,7 @@ Get-Help Search-PSHistory -Examples
 Get-Help .\PSHistory\setup.ps1 -Full
 ```
 
-The [test suite](Tests/PSHistory.Tests.ps1) uses synthetic history files and covers retrieval, search, limits, deduplication, multiline input, Unicode, the command-line-only default display, downstream metadata selection, path discovery, concurrent appends, and error handling. It has been run with Pester 3.4.0. To run it from the repository root with that version installed:
+The local suite in `Tests/PSHistory.Tests.ps1` uses synthetic history files and covers retrieval, search, limits, deduplication, multiline input, Unicode, the command-line-only default display, downstream metadata selection, path discovery, concurrent appends, and error handling. Test folders are ignored by Git and are not included in a fresh checkout. With the local suite present, run it from the repository root using Pester 3.4.0:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0

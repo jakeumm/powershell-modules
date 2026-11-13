@@ -1,1 +1,0 @@
-Set-Alias notepad notepad++.exe

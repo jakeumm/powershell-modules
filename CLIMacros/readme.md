@@ -56,7 +56,7 @@ Importing registers shortcut completion for both `cd` and `CLIMacros\cd`. Comple
 Get-Content .\application.log | findstr /n error
 ```
 
-`findstr.exe` must be available through command discovery. The Notepad++ launcher remains a separate [temp/notepad.ps1](../temp/notepad.ps1) script.
+`findstr.exe` must be available through command discovery. The Notepad++ launcher is a separate local `temp/notepad.ps1` script; the `temp` folder is ignored by Git.
 
 Built-in help is available after importing:
 
@@ -67,7 +67,7 @@ Get-Help CLIMacros\cd -Full
 Get-Help CLIMacros\findstr -Full
 ```
 
-The [tests](Tests/CLIMacros.Tests.ps1) verify exports, clipboard values, navigation, shortcut resolution and completion, and case-insensitive text filtering. Clipboard writes and COM shortcut resolution are mocked. The suite uses Pester 3.4.0:
+Local tests in `Tests/CLIMacros.Tests.ps1` verify exports, clipboard values, navigation, shortcut resolution and completion, and case-insensitive text filtering. Clipboard writes and COM shortcut resolution are mocked. Test folders are ignored by Git and are not included in a fresh checkout. With the local tests present, run them using Pester 3.4.0:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0

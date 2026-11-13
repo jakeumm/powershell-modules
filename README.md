@@ -6,6 +6,7 @@
 | [SearchTools](SearchTools/readme.md) | `Search-ChildItem` | Search recursively by name, returning files by default or directories with `-Directory`. Supports depth limits, hidden items, and literal paths. |
 | [LinuxAliases](LinuxAliases/readme.md) | `grep`, `touch`, `vi` | Search text with basic grep-style flags, create items with `New-Item`, and launch Vim. |
 | [CLIMacros](CLIMacros/readme.md) | `Copy-Path`, `pwd`, `cd`, `findstr` | Copy paths to the clipboard, navigate through Windows shortcuts, and filter text case-insensitively. |
+| [GroupPolicy](GroupPolicy/readme.md) | `Get-GroupPolicy` | Refresh policy and open an HTML report locally or from a remote computer using PowerShell remoting and administrative shares. |
 
 Setup scripts are available for PSHistory, SearchTools, and LinuxAliases. Run the ones you want from the repository root:
 
@@ -56,6 +57,7 @@ Import-Module .\PSHistory\PSHistory.psm1
 Import-Module .\SearchTools\SearchTools.psm1
 Import-Module .\LinuxAliases\LinuxAliases.psm1
 Import-Module .\CLIMacros\CLIMacros.psm1
+Import-Module .\GroupPolicy\GroupPolicy.psm1
 ```
 
 Try these examples after importing:
@@ -99,6 +101,9 @@ Copy-Path .\README.md
 
 # Use a macro even while PowerShell's built-in pwd alias is present.
 CLIMacros\pwd
+
+# Refresh remote computer policy and open its HTML report through C$.
+Get-GroupPolicy -ComputerName PC01
 ```
 
 PSHistory returns full `PSHistory.Entry` objects, newest first, with a default display showing only `CommandLine`. Metadata such as `EntryNumber` and `SourcePath` remains available downstream. Use `-AsString` for complete command strings. It reads saved history; timestamps and other execution metadata are not available from that file.
@@ -113,6 +118,7 @@ See each module's readme for all parameters, setup options, behavior, and troubl
 - [SearchTools documentation](SearchTools/readme.md)
 - [LinuxAliases documentation](LinuxAliases/readme.md)
 - [CLIMacros documentation](CLIMacros/readme.md)
+- [GroupPolicy documentation](GroupPolicy/readme.md)
 
 Built-in help is also available after import:
 
@@ -125,7 +131,9 @@ Get-Help .\LinuxAliases\setup.ps1 -Full
 Get-Help Copy-Path -Full
 ```
 
-The test suites have been run with Pester 3.4.0. With that version installed, run them from the repository root:
+Planning documents, `Test`/`Tests` folders, and the root `temp` folder are ignored by Git. Test suites and temporary files are kept locally and are not included in a fresh checkout.
+
+The local test suites have been run with Pester 3.4.0. If you have those local test files and that Pester version installed, run them from the repository root:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0
@@ -133,4 +141,5 @@ Invoke-Pester -Script .\PSHistory\Tests\PSHistory.Tests.ps1
 Invoke-Pester -Script .\SearchTools\Tests\SearchTools.Tests.ps1
 Invoke-Pester -Script .\LinuxAliases\Tests\grep.Tests.ps1
 Invoke-Pester -Script .\CLIMacros\Tests\CLIMacros.Tests.ps1
+Invoke-Pester -Script .\GroupPolicy\Tests\GroupPolicy.Tests.ps1
 ```

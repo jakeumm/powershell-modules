@@ -144,7 +144,7 @@ Get-Help Search-ChildItem -Full
 Get-Help .\SearchTools\setup.ps1 -Full
 ```
 
-The [test suite](Tests/SearchTools.Tests.ps1) uses temporary file-system fixtures and synthetic permission errors. It covers file-only defaults, directory selection, full output objects, downstream property selection, the default two-column display, filters, multiple roots, wildcard and literal paths, recursion depth, hidden items, conflicting parameters, and error handling. It has been run with Pester 3.4.0:
+The local suite in `Tests/SearchTools.Tests.ps1` uses temporary file-system fixtures and synthetic permission errors. It covers file-only defaults, directory selection, full output objects, downstream property selection, the default two-column display, filters, multiple roots, wildcard and literal paths, recursion depth, hidden items, conflicting parameters, and error handling. Test folders are ignored by Git and are not included in a fresh checkout. With the local suite present, run it using Pester 3.4.0:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0

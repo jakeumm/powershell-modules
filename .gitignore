@@ -1,2 +1,9 @@
 # Local planning documents, in any directory and capitalization.
 [Pp][Ll][Aa][Nn].[Mm][Dd]
+
+# Local test folders at any depth, regardless of capitalization.
+[Tt][Ee][Ss][Tt]/
+[Tt][Ee][Ss][Tt][Ss]/
+
+# Local staging files at the repository root.
+/[Tt][Ee][Mm][Pp]/

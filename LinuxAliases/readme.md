@@ -110,7 +110,7 @@ Get-Help grep -Full
 Get-Help .\LinuxAliases\setup.ps1 -Full
 ```
 
-The [tests](Tests/grep.Tests.ps1) cover module exports, the `touch` alias, supported grep flags, pipeline and file searches, recursion, combined options, numbering, empty inputs, and error handling. They use Pester 3.4.0:
+Local tests in `Tests/grep.Tests.ps1` cover module exports, the `touch` alias, supported grep flags, pipeline and file searches, recursion, combined options, numbering, empty inputs, and error handling. Test folders are ignored by Git and are not included in a fresh checkout. With the local tests present, run them using Pester 3.4.0:
 
 ```powershell
 Import-Module Pester -RequiredVersion 3.4.0
