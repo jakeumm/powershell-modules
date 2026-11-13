@@ -1,16 +1,17 @@
-**PowerShell Modules** is a collection of utilities for finding files and directories and reusing persistent command history. Use PowerShell 7 or later; the setup scripts use Windows installation paths by default.
+**PowerShell Modules** is a collection of utilities for finding files and directories, reusing persistent command history, and working with Linux-style command helpers. Use PowerShell 7 or later; the setup scripts use Windows installation paths by default.
 
 | Module | Commands | Purpose |
 | --- | --- | --- |
 | [PSHistory](PSHistory/readme.md) | `Get-PSHistory`, `Search-PSHistory` | Retrieve and search existing PSReadLine history across sessions, with multiline support, regex matching, and deduplication. |
 | [SearchTools](SearchTools/readme.md) | `Search-ChildItem` | Search recursively by name, returning files by default or directories with `-Directory`. Supports depth limits, hidden items, and literal paths. |
-| [LinuxAliases](LinuxAliases/readme.md) | `grep`, `touch`, `vi` | Search text with basic grep-style flags, create items with `New-Item`, and launch Vim. Import `LinuxAliases.psm1` directly. |
+| [LinuxAliases](LinuxAliases/readme.md) | `grep`, `touch`, `vi` | Search text with basic grep-style flags, create items with `New-Item`, and launch Vim. |
 
-Run either or both setup scripts from the repository root:
+Run the setup scripts for the modules you want from the repository root:
 
 ```powershell
 .\PSHistory\setup.ps1
 .\SearchTools\setup.ps1
+.\LinuxAliases\setup.ps1
 ```
 
 Each script creates the destination directories, installs its module, and prompts to import it into the current session. Answer `y` or `yes` to import; press Enter to skip. Running setup again refreshes the installed module.
@@ -22,9 +23,10 @@ $HOME\Documents\WindowsPowerShell\Modules\PSHistory.psm1
 $HOME\Documents\WindowsPowerShell\Modules\PSHistory.format.ps1xml
 $HOME\Documents\WindowsPowerShell\Modules\SearchTools.psm1
 $HOME\Documents\WindowsPowerShell\Modules\SearchTools.format.ps1xml
+$HOME\Documents\WindowsPowerShell\Modules\LinuxAliases.psm1
 ```
 
-These destinations use `WindowsPowerShell` even when setup runs in PowerShell 7. Both installers accept `-ModulePath` to select a different destination file and install their format definition beside the module; keep each module and its format file together. PSHistory setup also accepts `-ProfilePath` to select a different profile.
+These destinations use `WindowsPowerShell` even when setup runs in PowerShell 7. All installers accept `-ModulePath` to select a different destination file. PSHistory and SearchTools also install their format definitions beside the module; keep each of those modules and its format file together. PSHistory setup also accepts `-ProfilePath` to select a different profile. LinuxAliases installs a single module file; `vi` requires Vim to be installed separately.
 
 PSHistory setup adds these settings to the current host's `$PROFILE` when they are missing:
 
@@ -41,6 +43,7 @@ Import the default installations by full path in later sessions:
 ```powershell
 Import-Module (Join-Path $HOME 'Documents\WindowsPowerShell\Modules\PSHistory.psm1')
 Import-Module (Join-Path $HOME 'Documents\WindowsPowerShell\Modules\SearchTools.psm1')
+Import-Module (Join-Path $HOME 'Documents\WindowsPowerShell\Modules\LinuxAliases.psm1')
 ```
 
 To load the modules automatically in future sessions, add the desired import lines above to `$PROFILE`. If you selected custom installation paths, use those paths instead. Setup's import prompts apply to the current session; automatic imports are configured separately in the profile.
@@ -85,6 +88,9 @@ Search-ChildItem '*.ps1' -Force -Depth 1
 
 # Treat wildcard characters in a starting path literally.
 Search-ChildItem '*.log' -LiteralPath 'C:\Builds\[latest]'
+
+# Search pipeline text using grep-style ignore-case and line-number flags.
+'INFO: ready', 'ERROR: failed' | grep -in error
 ```
 
 PSHistory returns full `PSHistory.Entry` objects, newest first, with a default display showing only `CommandLine`. Metadata such as `EntryNumber` and `SourcePath` remains available downstream. Use `-AsString` for complete command strings. It reads saved history; timestamps and other execution metadata are not available from that file.
@@ -103,6 +109,8 @@ Built-in help is also available after import:
 Get-Help Get-PSHistory -Full
 Get-Help Search-PSHistory -Examples
 Get-Help Search-ChildItem -Full
+Get-Help grep -Full
+Get-Help .\LinuxAliases\setup.ps1 -Full
 ```
 
 The test suites have been run with Pester 3.4.0. With that version installed, run them from the repository root:

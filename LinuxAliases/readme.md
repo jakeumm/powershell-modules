@@ -1,4 +1,32 @@
-**LinuxAliases** combines its helpers in a single [LinuxAliases.psm1](LinuxAliases.psm1) module. Import it from the repository root:
+**LinuxAliases** combines its helpers in a single [LinuxAliases.psm1](LinuxAliases.psm1) module. Run [setup.ps1](setup.ps1) in PowerShell 7 or later from the repository root:
+
+```powershell
+.\LinuxAliases\setup.ps1
+```
+
+Setup creates the destination directories and installs the module at:
+
+```text
+$HOME\Documents\WindowsPowerShell\Modules\LinuxAliases.psm1
+```
+
+The script prompts `Import LinuxAliases into this session now? [y/N]`. Answer `y` or `yes` to import `grep`, `touch`, and `vi` into the current session. Press Enter to skip importing and display the command to use later. Repeating setup refreshes the installed module from the source beside the script.
+
+The default destination uses `WindowsPowerShell` even when running PowerShell 7. Override it with `-ModulePath`, which accepts the full destination module filename:
+
+```powershell
+.\LinuxAliases\setup.ps1 -ModulePath 'D:\PowerShell\Modules\LinuxAliases.psm1'
+```
+
+Keep `setup.ps1` beside `LinuxAliases.psm1` when running it. Import the default installation by full path in later sessions:
+
+```powershell
+Import-Module (Join-Path $HOME 'Documents\WindowsPowerShell\Modules\LinuxAliases.psm1')
+```
+
+To load the module automatically in future sessions, add that import line to `$PROFILE`. If you chose a custom `-ModulePath`, use that path instead. Setup imports into the current session when requested; future imports are configured through the profile. Vim must be installed separately to use `vi`.
+
+You can also import the source module directly from the repository root:
 
 ```powershell
 Import-Module .\LinuxAliases\LinuxAliases.psm1
@@ -12,7 +40,7 @@ The module exports these commands:
 | `touch` | Alias for `New-Item` | Create files or other item types using PowerShell parameters. |
 | `vi` | Alias for `vim` | Open Vim, which must be available through command discovery. |
 
-All three commands become available on import. To load them in future sessions, add an `Import-Module` line to `$PROFILE` using the full module path. Re-import with `-Force` after updating the module.
+All three commands become available on import. Re-import with `-Force` after updating the module.
 
 If you previously loaded the standalone scripts, replace their dot-source lines with the module import. Remove any old aliases in the current scope before importing, particularly the old `grep` alias to `Select-String`:
 
@@ -73,6 +101,13 @@ touch .\new-folder -ItemType Directory
 
 ```powershell
 vi .\notes.txt
+```
+
+Read the built-in help after importing the module:
+
+```powershell
+Get-Help grep -Full
+Get-Help .\LinuxAliases\setup.ps1 -Full
 ```
 
 The [tests](Tests/grep.Tests.ps1) cover module exports, the `touch` alias, supported grep flags, pipeline and file searches, recursion, combined options, numbering, empty inputs, and error handling. They use Pester 3.4.0:
